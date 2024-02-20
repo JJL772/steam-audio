@@ -17,30 +17,51 @@ include(SteamAudioHelpers)
 
 get_bin_subdir(IPL_BIN_SUBDIR)
 
+if (NOT DEFINED IPP_DIR)
+	set(IPP_DIR "${CMAKE_HOME_DIRECTORY}/deps/ipp")
+endif()
+
+# Check if we have a platform subdir in IPP. If not, this is a system level install of IPP on Linux (presumably)
+if (EXISTS "${IPP_DIR}/lib/${IPL_BIN_SUBDIR}")
+	set(IPP_BIN_SUBDIR ${IPL_BIN_SUBDIR})
+endif()
+
+
 find_path(IPP_INCLUDE_DIR
 	NAMES 			ipp.h
-	PATHS 			${CMAKE_HOME_DIRECTORY}/deps/ipp/include
+	PATHS 			${IPP_DIR}/include/ipp
 )
+
+if (NOT ${IPP_INCLUDE_DIR})
+	find_path(IPP_INCLUDE_DIR
+		NAMES ipp.h
+		PATHS ${IPP_DIR}/include
+	)
+endif()
 
 find_library(IPP_core_LIBRARY
 	NAMES ippcoremt ippcore
-	PATHS ${CMAKE_HOME_DIRECTORY}/deps/ipp/lib/${IPL_BIN_SUBDIR}
+	PATHS ${IPP_DIR}/lib/${IPP_BIN_SUBDIR}
 )
 
 find_library(IPP_vm_LIBRARY
 	NAMES ippvmmt ippvm
-	PATHS ${CMAKE_HOME_DIRECTORY}/deps/ipp/lib/${IPL_BIN_SUBDIR}
+	PATHS ${IPP_DIR}/lib/${IPP_BIN_SUBDIR}
 )
 
 find_library(IPP_s_LIBRARY
 	NAMES ippsmt ipps
-	PATHS ${CMAKE_HOME_DIRECTORY}/deps/ipp/lib/${IPL_BIN_SUBDIR}
+	PATHS ${IPP_DIR}/lib/${IPP_BIN_SUBDIR}
 )
 
 if (IPP_INCLUDE_DIR)
-	file(STRINGS ${IPP_INCLUDE_DIR}/ippversion.h _IPP_VERSION_MAJOR REGEX "^#define[\t ]+IPP_VERSION_MAJOR[\t ]+.*")
-	file(STRINGS ${IPP_INCLUDE_DIR}/ippversion.h _IPP_VERSION_MINOR REGEX "^#define[\t ]+IPP_VERSION_MINOR[\t ]+.*")
-	file(STRINGS ${IPP_INCLUDE_DIR}/ippversion.h _IPP_VERSION_PATCH REGEX "^#define[\t ]+IPP_VERSION_UPDATE[\t ]+.*")
+	set(_IPP_VER_FILE "${IPP_INCLUDE_DIR}/ippversion.h")
+	if (EXISTS ${IPP_INCLUDE_DIR}/ipp/ippversion.h)
+		set(_IPP_VER_FILE "${IPP_INCLUDE_DIR}/ipp/ippversion.h")
+	endif()
+	file(STRINGS ${_IPP_VER_FILE} _IPP_VERSION_MAJOR REGEX "^#define[\t ]+IPP_VERSION_MAJOR[\t ]+.*")
+	file(STRINGS ${_IPP_VER_FILE} _IPP_VERSION_MINOR REGEX "^#define[\t ]+IPP_VERSION_MINOR[\t ]+.*")
+	file(STRINGS ${_IPP_VER_FILE} _IPP_VERSION_PATCH REGEX "^#define[\t ]+IPP_VERSION_UPDATE[\t ]+.*")
 	string(REGEX REPLACE "^#define[\t ]+IPP_VERSION_MAJOR[\t ]+([0-9]+).*" "\\1" IPP_VERSION_MAJOR ${_IPP_VERSION_MAJOR})
 	string(REGEX REPLACE "^#define[\t ]+IPP_VERSION_MINOR[\t ]+([0-9]+).*" "\\1" IPP_VERSION_MINOR ${_IPP_VERSION_MINOR})
 	string(REGEX REPLACE "^#define[\t ]+IPP_VERSION_UPDATE[\t ]+([0-9]+).*" "\\1" IPP_VERSION_PATCH ${_IPP_VERSION_PATCH})

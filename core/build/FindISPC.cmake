@@ -16,9 +16,13 @@ include(FindPackageHandleStandardArgs)
 
 get_host_bin_subdir(IPL_BIN_SUBDIR)
 
+if (NOT DEFINED ISPC_DIR)
+	set(ISPC_DIR "${CMAKE_HOME_DIRECTORY}/deps/ispc")
+endif()
+
 find_program(ISPC_EXECUTABLE
 	NAMES	ispc
-	PATHS 	${CMAKE_HOME_DIRECTORY}/deps/ispc/bin/${IPL_BIN_SUBDIR}
+	PATHS 	${ISPC_DIR}/bin/${IPL_BIN_SUBDIR}
 )
 
 find_package_handle_standard_args(ISPC
